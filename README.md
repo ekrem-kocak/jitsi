@@ -1,3 +1,4 @@
+# Jitsi Self-Hosting Guide - Docker Installation and Excalidraw Integration
 # Jitsi Meet on Docker
 
 ![](resources/jitsi-docker.png)
