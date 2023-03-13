@@ -1,40 +1,68 @@
 # Jitsi Self-Hosting Guide - Docker Installation and Excalidraw Integration
-# Jitsi Meet on Docker
 
-![](resources/jitsi-docker.png)
+## Installation Steps
 
-[Jitsi](https://jitsi.org/) is a set of Open Source projects that allows you to easily build and deploy secure videoconferencing solutions.
+- You can download the package from the following link: https://github.com/jitsi/docker-jitsi-meet/releases/tag/stable-8319 and extract it to a folder.
 
-[Jitsi Meet](https://jitsi.org/jitsi-meet/) is a fully encrypted, 100% Open Source video conferencing solution that you can use all day, every day, for free — with no account needed.
+![image](https://user-images.githubusercontent.com/64695572/224693374-c71fb916-eb5a-4e70-8ab2-9214d92d2c22.png)
 
-This repository contains the necessary tools to run a Jitsi Meet stack on [Docker](https://www.docker.com) using [Docker Compose](https://docs.docker.com/compose/).
+1. Create a .env file by copying and adjusting env.example: `cp env.example .env` 
+2. Set strong passwords in the security section options of .env file by running the following bash script `./gen-passwords.sh`
+3. Create required `CONFIG` directories
+    - For linux:
+    
+    ```
+    mkdir -p ~/.jitsi-meet-cfg/{web,transcripts,prosody/config,prosody/prosody-plugins-custom,jicofo,jvb,jigasi,jibri}
+    
+    ```
+    
+    - For Windows:
 
-All our images are published on [DockerHub](https://hub.docker.com/u/jitsi/).
+    ```
+    echo web,transcripts,prosody/config,prosody/prosody-plugins-custom,jicofo,jvb,jigasi,jibri | % { mkdir "~/.jitsi-meet-cfg/$_" }
+    
+    ```
+4. Open the .env file with an editor and go to the bottom line of the file.
+    ```
+    ENABLE_LOBBY=1
+    ENABLE_PREJOIN_PAGE=1
+    ENABLE_WELCOME_PAGE=1
+    DISABLE_AUDIO_LEVELS=0
+    ENABLE_NOISY_MIC_DETECTION=1
+    ENABLE_GUESTS=1
+    ENABLE_XMPP_WEBSOCKET=0
+    ENABLE_RECORDING = 1
+    ENABLE_SERVICE_RECORDING = 0
+    ENABLE_FILE_RECORDING_SHARING = 1
+    WHITEBOARD_ENABLED = 1
+    WHITEBOARD_COLLAB_SERVER_PUBLIC_URL = "http://localhost:3001"
+    ``` 
+    - Assign the WHITEBOARD_COLLAB_SERVER_PUBLIC_URL and the port for the Excalidraw room.
+    - If you want to add additional features, you can refer to this link: https://github.com/jitsi/docker-jitsi-meet/blob/master/web/rootfs/defaults/settings-config.js.
+5. The following lines were added to the docker-compose.yml file:
+    ```
+    excalidraw:
+        image: docker.io/excalidraw/excalidraw:latest
+        environment:
+            - EXCALIDRAW_ENABLE_LIVE_COLLABORATION=true
+            - EXCALIDRAW_ALLOW_ANONYMOUS_EDITS=true
+        ports:
+            - "5000:5000"
+            
+    excalidraw-room:
+        image: docker.io/excalidraw/excalidraw-room:latest
+        environment:
+          - PORT=3001
+          - EXCALIDRAW_ROOMS__DEFAULT__NAME=example
+          - EXCALIDRAW_ROOMS__DEFAULT__VIEWS=30
+          - EXCALIDRAW_ROOMS__DEFAULT__EDITORS=30
+        ports:
+          - "3001:3001"
+    ```
+6. Run the command `docker-compose up -d` and Jitsi will be ready to use at http://localhost:8000/.
 
-## Supported architectures
 
-Starting with `stable-7439` the published images are available for `amd64` and `arm64`.
-
-## Tags
-
-These are the currently published tags for all our images:
-
-Tag | Description
--- | --
-`stable` | Points to the latest stable release
-`stable-NNNN-X` | A stable release
-`unstable` | Points to the latest unstable release
-`unstable-YYYY-MM-DD` | Daily unstable release
-`latest` | Deprecated, no longer updated (will be removed)
-
-## Installation
-
-The installation manual is available [here](https://jitsi.github.io/handbook/docs/devops-guide/devops-guide-docker).
-
-### Kubernetes
-
-If you plan to install the jitsi-meet stack on a Kubernetes cluster you can find tools and tutorials in the project [Jitsi on Kubernetes](https://github.com/jitsi-contrib/jitsi-kubernetes).
-
-## TODO
-
-* Builtin TURN server.
+### If you encounter an error due to HTTPS, you can make the following changes in Google Chrome:
+- Go to chrome://flags/#allow-insecure-localhost.
+  ![image](https://user-images.githubusercontent.com/64695572/224695480-8c0a1296-c6a2-4cc7-a10f-5b89f98f3810.png)
+- Enable this option.
